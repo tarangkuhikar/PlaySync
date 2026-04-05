@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -13,26 +14,29 @@ public class AuthController : ControllerBase
         _context = context;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        await _auth.Register(dto.Username, dto.Password);
+        var success = await _auth.Register(dto.Username, dto.Password);
+
+        if (!success)
+            return BadRequest("Invalid username or password.");
+
         return Ok();
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
-    public IActionResult Login(RegisterDto dto)
+    public async Task<IActionResult> Login(RegisterDto dto)
     {
-        var user = _context.Users.FirstOrDefault(u => u.Username == dto.Username);
+        var user = await _auth.ValidateUser(dto.Username, dto.Password);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        if (user == null)
             return Unauthorized();
 
         var token = _auth.GenerateJwt(user);
-        if (token == null)
-        {
-            return Problem();
-        }
+
         return Ok(new { token });
     }
 }
