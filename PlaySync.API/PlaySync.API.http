@@ -1,0 +1,6 @@
+@PlaySync.API_HostAddress = http://localhost:5208
+
+GET {{PlaySync.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

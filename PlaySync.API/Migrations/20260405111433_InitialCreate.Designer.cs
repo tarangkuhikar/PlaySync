@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace GameBackend.API.Migrations
+namespace PlaySync.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260405111433_InitialCreate")]
