@@ -1,6 +1,6 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 [ApiController]
 [Authorize]
@@ -14,56 +14,39 @@ public class GameController : ControllerBase
         _service = service;
     }
 
-    private int? GetUserId()
+    private int GetUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-        if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
-            return null;
+        if (claim == null || !int.TryParse(claim.Value, out var userId))
+        {
+            throw new UnauthorizedAccessException("User ID claim is missing or invalid.");
+        }
 
-        if (int.TryParse(claim.Value, out var userId))
-            return userId;
-
-        return null;
+        return userId;
     }
 
     [HttpPost("create")]
     public async Task<IActionResult> CreateRoom()
     {
-        int? id = GetUserId();
-        if (id is not int userId)
-        {
-            return Unauthorized();
-        }
+        int id = GetUserId();
 
-        var room = await _service.CreateRoom(userId);
+        var room = await _service.CreateRoom(id);
         return Ok(room);
     }
 
     [HttpPost("join/{code}")]
     public async Task<IActionResult> JoinRoom(string code)
     {
-        int? id = GetUserId();
+        int id = GetUserId();
 
-        if (id is not int userId)
-        {
-            return Unauthorized();
-        }
-
-        var response = await _service.JoinRoom(code, userId);
+        var response = await _service.JoinRoom(code, id);
         return response ? Ok() : NotFound();
     }
 
     [HttpGet]
     public async Task<IActionResult> GetRooms()
     {
-        int? id = GetUserId();
-
-        if (id is not int userId)
-        {
-            return Unauthorized();
-        }
-
         var result = await _service.GetRooms();
         return Ok(result);
     }
