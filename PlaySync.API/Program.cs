@@ -12,45 +12,51 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = Microsoft.OpenApi.ParameterLocation.Header,
-        Description = "Enter JWT token",
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
-        Scheme = "bearer"
-    });
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Enter JWT token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+        }
+    );
+
+    options.AddSecurityRequirement(document =>
+        new() { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] }
+    );
 });
 
-var keyString = builder.Configuration["Jwt:Key"]
+var keyString =
+    builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT Signing Key is required.");
 
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
-var signingCredentials = new SigningCredentials(
-    key,
-    SecurityAlgorithms.HmacSha256
-);
+var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
 builder.Services.AddSingleton(signingCredentials);
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+builder
+    .Services.AddAuthentication(options =>
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true,
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
 
-        IssuerSigningKey = key
-    };
-});
+            IssuerSigningKey = key,
+        };
+    });
 
 builder.Services.AddAuthorization();
 
@@ -58,7 +64,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<GameService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 var app = builder.Build();
 
