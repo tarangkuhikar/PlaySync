@@ -28,20 +28,27 @@ public class GameController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateRoom()
     {
-        var id = GetUserId()
-            ?? throw new UnauthorizedAccessException();
+        int? id = GetUserId();
+        if (id is not int userId)
+        {
+            return Unauthorized();
+        }
 
-        var room = await _service.CreateRoom(id);
+        var room = await _service.CreateRoom(userId);
         return Ok(room);
     }
 
     [HttpPost("join/{code}")]
     public async Task<IActionResult> JoinRoom(string code)
     {
-        var id = GetUserId()
-            ?? throw new UnauthorizedAccessException();
+        int? id = GetUserId();
 
-        await _service.JoinRoom(code, id);
+        if (id is not int userId)
+        {
+            return Unauthorized();
+        }
+
+        await _service.JoinRoom(code, userId);
         return Ok();
     }
 
@@ -49,7 +56,8 @@ public class GameController : ControllerBase
     public IActionResult GetRooms()
     {
         int? id = GetUserId();
-        if (id == null)
+
+        if (id is not int userId)
         {
             return Unauthorized();
         }
