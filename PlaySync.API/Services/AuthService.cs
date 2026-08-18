@@ -1,18 +1,17 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 public class AuthService
 {
     private readonly AppDbContext _context;
-    private readonly IConfiguration _config;
+    private readonly SigningCredentials _signingCredentials;
 
-    public AuthService(AppDbContext context, IConfiguration config)
+    public AuthService(AppDbContext context, SigningCredentials signingCredentials)
     {
         _context = context;
-        _config = config;
+        _signingCredentials = signingCredentials;
     }
 
     public async Task<bool> Register(string username, string password)
@@ -45,12 +44,6 @@ public class AuthService
 
     public string GenerateJwt(User user)
     {
-        var keyString = _config["Jwt:Key"]
-            ?? throw new Exception("JWT Key not configured");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -60,7 +53,7 @@ public class AuthService
         var token = new JwtSecurityToken(
             claims: claims,
             expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: creds
+            signingCredentials: _signingCredentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

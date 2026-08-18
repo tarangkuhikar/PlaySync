@@ -48,8 +48,8 @@ public class GameController : ControllerBase
             return Unauthorized();
         }
 
-        await _service.JoinRoom(code, userId);
-        return Ok();
+        var response = await _service.JoinRoom(code, userId);
+        return response ? Ok() : NotFound();
     }
 
     [HttpGet]

@@ -22,13 +22,18 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var keyString = builder.Configuration.GetValue<string>("Jwt:Key"); ;
-if (keyString == null)
-{
-    throw new InvalidOperationException("JWT Signing Key is required.");
-}
+var keyString = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("JWT Signing Key is required.");
 
-var key = Encoding.UTF8.GetBytes(keyString);
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+
+var signingCredentials = new SigningCredentials(
+    key,
+    SecurityAlgorithms.HmacSha256
+);
+
+builder.Services.AddSingleton(signingCredentials);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -43,7 +48,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
 
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        IssuerSigningKey = key
     };
 });
 
