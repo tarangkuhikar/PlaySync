@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 public class GameService
 {
     private readonly AppDbContext _context;
@@ -15,32 +17,34 @@ public class GameService
             HostId = userId,
         };
 
-        _context.GameRooms.Add(room);
+        await _context.GameRooms.AddAsync(room);
         await _context.SaveChangesAsync();
 
         var player = new GamePlayer { UserId = userId, GameRoomId = room.Id };
 
-        _context.GamePlayers.Add(player);
+        await _context.GamePlayers.AddAsync(player);
         await _context.SaveChangesAsync();
 
         return room;
     }
 
-    public async Task JoinRoom(string roomCode, int userId)
+    public async Task<bool> JoinRoom(string roomCode, int userId)
     {
-        var room = _context.GameRooms.FirstOrDefault(r => r.RoomCode == roomCode);
+        var room = await _context.GameRooms.FirstOrDefaultAsync(r => r.RoomCode == roomCode);
 
         if (room == null)
-            throw new Exception("Room not found");
+            return false;
 
         var player = new GamePlayer { UserId = userId, GameRoomId = room.Id };
 
-        _context.GamePlayers.Add(player);
+        await _context.GamePlayers.AddAsync(player);
         await _context.SaveChangesAsync();
+
+        return true;
     }
 
-    public List<GameRoom> GetRooms()
+    public async Task<List<GameRoom>> GetRooms()
     {
-        return _context.GameRooms.ToList();
+        return await _context.GameRooms.ToListAsync();
     }
 }

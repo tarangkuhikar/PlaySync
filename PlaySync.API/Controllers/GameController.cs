@@ -53,7 +53,7 @@ public class GameController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetRooms()
+    public async Task<IActionResult> GetRooms()
     {
         int? id = GetUserId();
 
@@ -62,6 +62,7 @@ public class GameController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(_service.GetRooms());
+        var result = await _service.GetRooms();
+        return Ok(result);
     }
 }
