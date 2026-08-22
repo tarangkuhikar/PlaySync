@@ -35,12 +35,30 @@ public class GameController : ControllerBase
         return Ok(room);
     }
 
+    [HttpDelete("delete/{code}")]
+    public async Task<IActionResult> DeleteRoom(string code)
+    {
+        int id = GetUserId();
+
+        var response = await _service.DeleteRoom(code, id);
+        return response ? Ok() : Unauthorized();
+    }
+
     [HttpPost("join/{code}")]
     public async Task<IActionResult> JoinRoom(string code)
     {
         int id = GetUserId();
 
         var response = await _service.JoinRoom(code, id);
+        return response ? Ok() : NotFound();
+    }
+
+    [HttpPost("leave/{code}")]
+    public async Task<IActionResult> LeaveRoom(string code)
+    {
+        int id = GetUserId();
+
+        var response = await _service.LeaveRoom(code, id);
         return response ? Ok() : NotFound();
     }
 
