@@ -27,57 +27,60 @@ public class GameService
         return new GameCreateDto(room.RoomCode, room.HostId);
     }
 
-    public async Task<bool> DeleteRoom(string roomCode, int userId)
-    {
-        var room = await _context.GameRooms.FirstOrDefaultAsync(r => r.RoomCode == roomCode);
-
-        if (room == null || room.HostId != userId)
-            return false;
-
-        var hasPlayers = await _context.GamePlayers.AnyAsync(p => p.GameRoomId == room.Id);
-
-        if (hasPlayers)
-            return false;
-
-        _context.GameRooms.Remove(room);
-        await _context.SaveChangesAsync();
-
-        return true;
-    }
-
-    public async Task<bool> JoinRoom(string roomCode, int userId)
+    public async Task<DeleteRoomResult> DeleteRoom(string roomCode, int userId)
     {
         var room = await _context.GameRooms.FirstOrDefaultAsync(r => r.RoomCode == roomCode);
 
         if (room == null)
-            return false;
+            return DeleteRoomResult.RoomNotFound;
+
+        if (room.HostId != userId)
+            return DeleteRoomResult.UserNotHost;
+
+        var hasPlayers = await _context.GamePlayers.AnyAsync(p => p.GameRoomId == room.Id);
+
+        if (hasPlayers)
+            return DeleteRoomResult.PlayersStillInRoom;
+
+        _context.GameRooms.Remove(room);
+        await _context.SaveChangesAsync();
+
+        return DeleteRoomResult.Success;
+    }
+
+    public async Task<JoinRoomResult> JoinRoom(string roomCode, int userId)
+    {
+        var room = await _context.GameRooms.FirstOrDefaultAsync(r => r.RoomCode == roomCode);
+
+        if (room == null)
+            return JoinRoomResult.RoomNotFound;
 
         var player = new GamePlayer { UserId = userId, GameRoom = room };
 
         await _context.GamePlayers.AddAsync(player);
         await _context.SaveChangesAsync();
 
-        return true;
+        return JoinRoomResult.Success;
     }
 
-    public async Task<bool> LeaveRoom(string roomCode, int userId)
+    public async Task<LeaveRoomResult> LeaveRoom(string roomCode, int userId)
     {
         var room = await _context
             .GameRooms.Include(r => r.Players)
             .FirstOrDefaultAsync(r => r.RoomCode == roomCode);
 
         if (room == null)
-            return false;
+            return LeaveRoomResult.RoomNotFound;
 
         var player = room.Players.Find(x => x.UserId == userId);
 
         if (player == null)
-            return false;
+            return LeaveRoomResult.PlayerNotInRoom;
 
         room.Players.Remove(player);
         await _context.SaveChangesAsync();
 
-        return true;
+        return LeaveRoomResult.Success;
     }
 
     public async Task<List<GameRoomDto>> GetRooms()

@@ -40,8 +40,15 @@ public class GameController : ControllerBase
     {
         int id = GetUserId();
 
-        var response = await _service.DeleteRoom(code, id);
-        return response ? Ok() : Unauthorized();
+        var result = await _service.DeleteRoom(code, id);
+        return result switch
+        {
+            DeleteRoomResult.Success => Ok(),
+            DeleteRoomResult.RoomNotFound => NotFound(),
+            DeleteRoomResult.PlayersStillInRoom => BadRequest(),
+            DeleteRoomResult.UserNotHost => Unauthorized(),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, null),
+        };
     }
 
     [HttpPost("join/{code}")]
@@ -49,8 +56,15 @@ public class GameController : ControllerBase
     {
         int id = GetUserId();
 
-        var response = await _service.JoinRoom(code, id);
-        return response ? Ok() : NotFound();
+        var result = await _service.JoinRoom(code, id);
+        return result switch
+        {
+            JoinRoomResult.Success => Ok(),
+            JoinRoomResult.RoomNotFound => NotFound(),
+            JoinRoomResult.AlreadyJoined => BadRequest(),
+            JoinRoomResult.RoomFull => BadRequest(),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, null),
+        };
     }
 
     [HttpPost("leave/{code}")]
@@ -58,8 +72,14 @@ public class GameController : ControllerBase
     {
         int id = GetUserId();
 
-        var response = await _service.LeaveRoom(code, id);
-        return response ? Ok() : NotFound();
+        var result = await _service.LeaveRoom(code, id);
+        return result switch
+        {
+            LeaveRoomResult.Success => Ok(),
+            LeaveRoomResult.RoomNotFound => NotFound(),
+            LeaveRoomResult.PlayerNotInRoom => BadRequest(),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, null),
+        };
     }
 
     [HttpGet]

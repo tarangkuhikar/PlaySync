@@ -57,6 +57,7 @@ builder
             IssuerSigningKey = key,
         };
     });
+builder.Services.AddProblemDetails();
 
 builder.Services.AddAuthorization();
 
@@ -69,9 +70,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
