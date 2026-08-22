@@ -9,7 +9,7 @@ public class GameService
         _context = context;
     }
 
-    public async Task<GameRoom> CreateRoom(int userId)
+    public async Task<GameCreateDto> CreateRoom(int userId)
     {
         var room = new GameRoom
         {
@@ -24,7 +24,7 @@ public class GameService
 
         await _context.SaveChangesAsync();
 
-        return room;
+        return new GameCreateDto(room.RoomCode, room.HostId);
     }
 
     public async Task<bool> DeleteRoom(string roomCode, int userId)
