@@ -66,7 +66,7 @@ public class GameService
             .GameRooms.Include(r => r.Players)
             .FirstOrDefaultAsync(r => r.RoomCode == roomCode);
 
-        if (room == null || room.HostId == userId)
+        if (room == null)
             return false;
 
         var player = room.Players.Find(x => x.UserId == userId);
