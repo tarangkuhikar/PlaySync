@@ -12,7 +12,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
     }
 
-    public DbSet<User> Users { get; set; }
-    public DbSet<GameRoom> GameRooms { get; set; }
-    public DbSet<GamePlayer> GamePlayers { get; set; }
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<GameRoom> GameRooms { get; set; } = null!;
+    public DbSet<GamePlayer> GamePlayers { get; set; } = null!;
 }
